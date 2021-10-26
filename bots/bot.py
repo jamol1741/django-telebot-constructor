@@ -25,19 +25,14 @@ class MyBot(TeleBot):
             if need_pop:
                 new_messages.pop(i)  # removing message that was detected with next_step_handler
 
+    def process_new_updates(self, updates):
+        if isinstance(self.token, NotValidToken):
+            raise ValueError("Token is not valid. You need to change Bot instance token to valid one")
+        super(MyBot, self).process_new_updates(updates)
+
 
 class NotValidToken:
     pass
 
 
 bot = MyBot(NotValidToken(), parse_mode='HTML')
-
-
-@bot.message_handler(commands='start')
-def start_handler(message: types.Message):
-    bot.send_message(message.chat.id, "hi, what's your name?")
-    bot.register_next_step_handler(message, process_name_step)
-
-
-def process_name_step(message: types.Message):
-    bot.send_message(message.chat.id, f"welcome, {message.text}")

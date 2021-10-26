@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from telebot import types
 
-from .bot import bot
+from .handlers import bot
 from .models import Bot
 
 
