@@ -1,4 +1,4 @@
-from typing import Optional, Callable, Union
+from typing import Callable, Union
 
 from telebot import TeleBot, types, Handler
 
@@ -30,38 +30,14 @@ class NotValidToken:
     pass
 
 
-class InvalidTokenException(Exception):
-    pass
+bot = MyBot(NotValidToken(), parse_mode='HTML')
 
 
-class ProcessUpdates:
-    def __init__(self):
-        self._bot: Optional[TeleBot] = MyBot(NotValidToken(), parse_mode='HTML')
-        self.register_handlers()
-
-    @property
-    def bot(self):
-        return self._bot
-
-    @bot.setter
-    def bot(self, token: str):
-        self._bot.token = token
-
-    def start_handler(self, message: types.Message):
-        self.bot.send_message(message.chat.id, "salom, ismingiz nima?")
-        self.bot.register_next_step_handler(message, self.edited_message_handler)
-
-    def edited_message_handler(self, message):
-        self.bot.send_message(message.chat.id, f'yaxshi, {message.text}')
-
-    def register_handlers(self):
-        self.bot.register_message_handler(self.start_handler, commands=['start'])
-
-    def run(self, data):
-        update = types.Update.de_json(data)
-        if isinstance(self.bot.token, NotValidToken):
-            raise InvalidTokenException('Token is invalid. You need to set a valid token before process updates')
-        self.bot.process_new_updates([update])
+@bot.message_handler(commands='start')
+def start_handler(message: types.Message):
+    bot.send_message(message.chat.id, "hi, what's your name?")
+    bot.register_next_step_handler(message, process_name_step)
 
 
-process_updates = ProcessUpdates()
+def process_name_step(message: types.Message):
+    bot.send_message(message.chat.id, f"welcome, {message.text}")
