@@ -1,10 +1,9 @@
-import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from telebot import TeleBot
+from telebot.apihelper import delete_webhook, set_webhook
 
 
 class BaseModel(models.Model):
@@ -25,16 +24,10 @@ class Bot(BaseModel):
         return self.username
 
     def clean(self):
-        api_url = settings.TELEGRAM_BASE_URL.format(token=self.token) + 'setwebhook'
-        print(api_url)
-        params = {
-            'url': f"{settings.HOST}/bot/{self.token}/"
-        }
-        r = requests.get(api_url, params=params)
-        if r.status_code == 200:
-            pass
-        else:
-            raise ValidationError(f"Could not set webhook. Please check params. {r.content}")
+        try:
+            set_webhook(self.token, f"{settings.HOST}/bot/{self.token}/")
+        except:
+            raise ValidationError("Could not set webhook. Please check params")
 
 
 class User(BaseModel):
@@ -54,7 +47,5 @@ class User(BaseModel):
 #     del bot
 
 @receiver(post_delete, sender=Bot)
-def delete_webhook(sender, instance: Bot, *args, **kwargs):
-    bot = TeleBot(instance.token)
-    bot.delete_webhook(drop_pending_updates=True)
-    del bot
+def delete_bot(sender, instance: Bot, *args, **kwargs):
+    delete_webhook(instance.token, drop_pending_updates=True)
