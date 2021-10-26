@@ -1,6 +1,7 @@
 from typing import Callable
 
-from telebot import TeleBot, types, AdvancedCustomFilter
+from telebot import TeleBot, types
+from telebot.handler_backends import StateContext
 
 
 class State:
@@ -35,7 +36,7 @@ class State:
         """Delete a state"""
         return self._states.pop(chat_id)
 
-    def get_data(self, chat_id):
+    def _get_data(self, chat_id):
         chat_id = self.id(chat_id)
         return self._states[chat_id]['data']
 
@@ -74,23 +75,6 @@ class State:
         """
         chat_id = self.id(chat_id)
         return StateContext(self, chat_id)
-
-
-class StateContext:
-    """
-    Class for data.
-    """
-
-    def __init__(self, obj: State, chat_id) -> None:
-        self.obj = obj
-        self.chat_id = chat_id
-        self.data = obj.get_data(chat_id)
-
-    def __enter__(self):
-        return self.data
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return
 
 
 class MyBot(TeleBot):
@@ -148,29 +132,3 @@ class MyBot(TeleBot):
 
 class InvalidToken:
     pass
-
-
-class StateFilter(AdvancedCustomFilter):
-    """
-    Filter to check state.
-
-    Example:
-    @bot.message_handler(state=1)
-    """
-
-    def __init__(self, bot):
-        self.bot: MyBot = bot
-
-    key = 'state'
-
-    def check(self, message, text):
-        _id = message.from_user.id
-        if self.bot.current_states.current_state(_id) is False:
-            return False
-        elif text == '*':
-            return True
-        elif type(text) is list:
-            return self.bot.current_states.current_state(_id) in text
-        return self.bot.current_states.current_state(_id) == text
-
-
