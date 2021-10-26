@@ -2,11 +2,9 @@ import requests
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
-
-
-# from django.db.models.signals import pre_save
-# from django.dispatch import receiver
-# from telebot import TeleBot
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+from telebot import TeleBot
 
 
 class BaseModel(models.Model):
@@ -46,6 +44,7 @@ class User(BaseModel):
     last_name = models.CharField(max_length=120, null=True, blank=True)
     username = models.CharField(max_length=120, null=True, blank=True)
 
+
 # @receiver(pre_save, sender=Bot)
 # def pre_save_bot(sender, instance: Bot, *args, **kwargs):
 #     bot = TeleBot(instance.token)
@@ -53,3 +52,9 @@ class User(BaseModel):
 #     instance.name = me.first_name
 #     instance.username = me.username
 #     del bot
+
+@receiver(post_delete, sender=Bot)
+def delete_webhook(sender, instance: Bot, *args, **kwargs):
+    bot = TeleBot(instance.token)
+    bot.delete_webhook(drop_pending_updates=True)
+    del bot
