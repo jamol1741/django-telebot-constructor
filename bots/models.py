@@ -23,15 +23,18 @@ class Bot(BaseModel):
     def __str__(self):
         return self.username
 
+    def set_webhook(self):
+        set_webhook(self.token, f"{settings.HOST}/bot/{self.token}/")
+
     def clean(self):
         try:
-            set_webhook(self.token, f"{settings.HOST}/bot/{self.token}/")
+            self.set_webhook()
         except:
             raise ValidationError("Could not set webhook. Please check params")
 
 
 class User(BaseModel):
-    bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
+    bots = models.ManyToManyField(Bot)
     tgid = models.BigIntegerField(unique=True)
     first_name = models.CharField(max_length=120)
     last_name = models.CharField(max_length=120, null=True, blank=True)
